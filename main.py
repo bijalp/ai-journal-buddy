@@ -23,25 +23,40 @@ class JournalAnalysis(BaseModel):
     follow_up_question: str
 
 
-journal_entry = input("How was your day? ")
+conversation = []
 
-response = client.models.generate_content(
-    model="gemini-3.6-flash",
-    contents=f"""
-    Use get_day_of_week to tell me what day today is
-    """,
-    config={
-        "tools": [get_current_date, get_day_of_week],
-        "automatic_function_calling": {
-            "disable": True
-        } 
-   }
-)
+conversation = []
 
-tool_call = response.candidates[0].content.parts[0].function_call
+while True:
+    journal_entry = input("\nYou: ")
 
-print("Tool requested:", tool_call.name)
-print("Arguments:", tool_call.args)
+    if journal_entry.lower() == "quit":
+        break
+
+    # Add user's message to conversation
+    conversation.append(f"User: {journal_entry}")
+
+    # Send entire conversation to the model
+    prompt = "\n".join(conversation)
+
+    response = client.models.generate_content(
+        model="gemini-3.6-flash",
+        contents=prompt
+    )
+
+    # Get AI response
+    buddy_response = response.text
+
+    print(f"\nJournal Buddy: {buddy_response}")
+
+    # Add AI response to conversation history
+    conversation.append(f"Journal Buddy: {buddy_response}")
+
+
+# tool_call = response.candidates[0].content.parts[0].function_call
+
+# print("Tool requested:", tool_call.name)
+# print("Arguments:", tool_call.args)
 
 
 if tool_call.name == "get_current_date":
